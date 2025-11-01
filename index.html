@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LexiGo Dictionary - Mobile UI/UX</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: "class", // Enable dark mode based on 'dark' class on <html>
+        theme: {
+          extend: {
+            colors: {
+              "primary-teal": "#00ADB5",
+              "dark-bg": "#222831",
+              "dark-card": "#393E46",
+              "light-bg": "#F5F7FA",
+              "light-card": "#FFFFFF",
+            },
+            fontFamily: {
+              sans: ["Inter", "sans-serif"],
+            },
+          },
+        },
+      };
+    </script>
+    <!-- Load Inter font -->
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap");
+    </style>
+  </head>
+  <body
+    class="font-sans antialiased transition-colors duration-300 dark:bg-dark-bg bg-light-bg min-h-screen"
+  >
+    <div id="app-container" class="max-w-xl mx-auto p-4 md:p-6">
+      <!-- HEADER & SETTINGS -->
+      <header class="flex justify-between items-center py-4 mb-6">
+        <h1 class="text-3xl font-extrabold text-primary-teal tracking-tight">
+          LexiGo
+        </h1>
+
+        <!-- Dark Mode Toggle -->
+        <button
+          id="theme-toggle"
+          onclick="toggleDarkMode()"
+          class="p-2 rounded-full transition-colors duration-300 dark:bg-dark-card bg-light-card shadow-md"
+        >
+          <svg
+            id="sun-icon"
+            class="w-6 h-6 text-yellow-500"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+            style="display: none"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
+            ></path>
+          </svg>
+          <svg
+            id="moon-icon"
+            class="w-6 h-6 text-gray-400"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
+            ></path>
+          </svg>
+        </button>
+      </header>
+
+      <!-- SEARCH BAR (High Priority UX Element) -->
+      <div class="relative mb-8 shadow-xl rounded-xl">
+        <input
+          type="text"
+          id="search-input"
+          placeholder="Search for a word, e.g., 'serendipity'"
+          oninput="handleSearchInput(this.value)"
+          class="w-full p-4 pl-12 text-lg rounded-xl focus:ring-2 focus:ring-primary-teal outline-none transition-all duration-200 dark:bg-dark-card dark:text-light-bg text-dark-bg border border-transparent dark:border-gray-700"
+        />
+
+        <svg
+          class="absolute left-3 top-1/2 transform -translate-y-1/2 w-6 h-6 text-gray-400 dark:text-gray-500"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+          ></path>
+        </svg>
+
+        <!-- Dynamic Search Suggestions (Hidden by default) -->
+        <div
+          id="suggestions-list"
+          class="absolute z-10 w-full mt-1 bg-light-card dark:bg-dark-card rounded-lg shadow-2xl max-h-48 overflow-y-auto border border-primary-teal/50"
+          style="display: none"
+        >
+          <!-- Suggestions rendered here -->
+        </div>
+      </div>
+
+      <!-- MAIN CONTENT AREA -->
+      <div id="content-area">
+        <!-- TABS: History & Favorites -->
+        <div
+          class="flex border-b border-gray-200 dark:border-gray-700 mb-6 sticky top-0 dark:bg-dark-bg bg-light-bg z-10"
+        >
+          <button
+            onclick="switchTab('result')"
+            id="tab-result"
+            class="tab-button active text-primary-teal border-primary-teal"
+          >
+            Definition
+          </button>
+          <button
+            onclick="switchTab('history')"
+            id="tab-history"
+            class="tab-button text-gray-500 dark:text-gray-400"
+          >
+            History
+          </button>
+          <button
+            onclick="switchTab('favorites')"
+            id="tab-favorites"
+            class="tab-button text-gray-500 dark:text-gray-400"
+          >
+            Favorites
+          </button>
+        </div>
+
+        <!-- View Containers -->
+        <div id="view-result" class="tab-view">
+          <!-- Search Result UI -->
+          <div id="result-container" class="space-y-6">
+            <p class="text-center text-gray-500 dark:text-gray-400 pt-10">
+              Start by searching a word!
+            </p>
+          </div>
+        </div>
+
+        <div id="view-history" class="tab-view hidden">
+          <!-- History List UI -->
+          <ul id="history-list" class="space-y-3">
+            <p class="text-center text-gray-500 dark:text-gray-400 pt-10">
+              No recent history.
+            </p>
+          </ul>
+        </div>
+
+        <div id="view-favorites" class="tab-view hidden">
+          <!-- Favorites List UI -->
+          <ul id="favorites-list" class="space-y-3">
+            <p class="text-center text-gray-500 dark:text-gray-400 pt-10">
+              No saved favorites.
+            </p>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <style>
+      /* Custom styles for tab buttons */
+      .tab-button {
+        flex-grow: 1;
+        padding: 1rem 0.5rem;
+        font-weight: 600;
+        border-bottom-width: 3px;
+        border-color: transparent;
+        transition: all 0.2s;
+        background-color: transparent;
+      }
+
+      .tab-button.active {
+        border-color: #00adb5; /* primary-teal */
+        color: #00adb5;
+      }
+
+      /* Styling for list items in History/Favorites */
+      .list-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem;
+        border-radius: 0.75rem;
+        transition: background-color 0.2s;
+        cursor: pointer;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1),
+          0 1px 2px 0 rgba(0, 0, 0, 0.06);
+      }
+      .dark .list-item {
+        background-color: #393e46; /* dark-card */
+        color: #f5f7fa;
+      }
+      .list-item:hover {
+        background-color: rgba(0, 173, 181, 0.1); /* primary-teal light hover */
+      }
+      .dark .list-item:hover {
+        background-color: rgba(0, 173, 181, 0.2); /* primary-teal dark hover */
+      }
+    </style>
+
+    <script>
+      // --- MOCK DATA & STATE MANAGEMENT (To demonstrate UX flow) ---
+
+      let state = {
+        currentTab: "result",
+        history: ["ubiquitous", "ephemeral"],
+        favorites: ["serendipity"],
+        darkMode: false,
+      };
+
+      const MOCK_DICTIONARY = {
+        serendipity: {
+          word: "Serendipity",
+          pronunciation: "/ˌserənˈdɪpɪti/",
+          type: "Noun",
+          definitions: [
+            "The occurrence and development of events by chance in a happy or beneficial way.",
+            "An aptitude for making desirable discoveries by accident.",
+          ],
+          examples: [
+            "The discovery of penicillin was a fortunate act of serendipity.",
+            "It was a moment of serendipity when she met her future business partner on the train.",
+          ],
+        },
+        ubiquitous: {
+          word: "Ubiquitous",
+          pronunciation: "/juːˈbɪkwɪtəs/",
+          type: "Adjective",
+          definitions: ["Present, appearing, or found everywhere."],
+          examples: [
+            "The company's brand is ubiquitous, visible in almost every store.",
+            "In the summer, the sound of cicadas is ubiquitous.",
+          ],
+        },
+        ephemeral: {
+          word: "Ephemeral",
+          pronunciation: "/ɪˈfɛmərəl/",
+          type: "Adjective",
+          definitions: ["Lasting for a very short time."],
+          examples: [
+            "Fame in the age of social media is often ephemeral.",
+            "The beauty of a sunset is an ephemeral joy.",
+          ],
+        },
+        ineffable: {
+          word: "Ineffable",
+          pronunciation: "/ɪnˈɛfəbəl/",
+          type: "Adjective",
+          definitions: [
+            "Too great or extreme to be expressed or described in words.",
+          ],
+          examples: ["The ineffable beauty of the starlit desert sky."],
+        },
+      };
+
+      const resultContainer = document.getElementById("result-container");
+      const suggestionsList = document.getElementById("suggestions-list");
+
+      // --- UX LOGIC ---
+
+      function initApp() {
+        // Load initial state (e.g., from localStorage or a database in a real app)
+        const savedTheme = localStorage.getItem("darkMode") === "true";
+        state.darkMode = savedTheme;
+        if (savedTheme) {
+          document.documentElement.classList.add("dark");
+        }
+        updateThemeIcons();
+
+        // Render initial views
+        renderHistory();
+        renderFavorites();
+
+        // Set up search bar interaction
+        document.addEventListener("click", (e) => {
+          if (!document.getElementById("search-input").contains(e.target)) {
+            suggestionsList.style.display = "none";
+          }
+        });
+      }
+
+      function toggleDarkMode() {
+        state.darkMode = !state.darkMode;
+        localStorage.setItem("darkMode", state.darkMode);
+        document.documentElement.classList.toggle("dark", state.darkMode);
+        updateThemeIcons();
+      }
+
+      function updateThemeIcons() {
+        const sunIcon = document.getElementById("sun-icon");
+        const moonIcon = document.getElementById("moon-icon");
+        if (state.darkMode) {
+          sunIcon.style.display = "block";
+          moonIcon.style.display = "none";
+        } else {
+          sunIcon.style.display = "none";
+          moonIcon.style.display = "block";
+        }
+      }
+
+      function handleSearchInput(query) {
+        query = query.toLowerCase().trim();
+        suggestionsList.innerHTML = "";
+
+        if (query.length < 2) {
+          suggestionsList.style.display = "none";
+          return;
+        }
+
+        const matches = Object.keys(MOCK_DICTIONARY)
+          .filter((word) => word.startsWith(query))
+          .slice(0, 5); // Max 5 suggestions
+
+        if (matches.length > 0) {
+          suggestionsList.style.display = "block";
+          matches.forEach((word) => {
+            const li = document.createElement("li");
+            li.className =
+              "px-4 py-3 cursor-pointer hover:bg-primary-teal/20 text-dark-bg dark:text-light-card transition-colors duration-150";
+            li.textContent = word;
+            li.onclick = () => {
+              document.getElementById("search-input").value = word;
+              searchWord(word);
+              suggestionsList.style.display = "none";
+            };
+            suggestionsList.appendChild(li);
+          });
+        } else {
+          suggestionsList.style.display = "none";
+        }
+      }
+
+      function searchWord(word) {
+        word = word.toLowerCase().trim();
+        const entry = MOCK_DICTIONARY[word];
+
+        if (!entry) {
+          renderNotFound(word);
+          return;
+        }
+
+        // 1. Render the result
+        renderResult(entry);
+
+        // 2. Add to history (if not already there)
+        if (!state.history.includes(word)) {
+          state.history.unshift(word); // Add to the beginning
+          state.history = state.history.slice(0, 10); // Keep max 10
+          renderHistory();
+        }
+
+        // 3. Switch to the result tab
+        switchTab("result");
+
+        // 4. Clear suggestions and input
+        suggestionsList.style.display = "none";
+        document.getElementById("search-input").value = entry.word;
+      }
+
+      function renderNotFound(word) {
+        resultContainer.innerHTML = `
+                <div class="p-6 text-center rounded-xl dark:bg-dark-card bg-light-card shadow-lg text-dark-bg dark:text-light-card">
+                    <h2 class="text-2xl font-bold mb-2">"${word}" not found</h2>
+                    <p class="text-gray-500 dark:text-gray-400">Try checking your spelling or searching for a different word.</p>
+                </div>
+            `;
+      }
+
+      function renderResult(entry) {
+        const isFavorite = state.favorites.includes(entry.word.toLowerCase());
+
+        resultContainer.innerHTML = `
+                <div class="p-6 rounded-xl dark:bg-dark-card bg-light-card shadow-2xl">
+                    <!-- Word Header -->
+                    <div class="flex justify-between items-center mb-4">
+                        <div class="space-y-1">
+                            <h2 class="text-4xl font-extrabold text-primary-teal">${
+                              entry.word
+                            }</h2>
+                            <p class="text-lg font-medium text-gray-500 dark:text-gray-400">${
+                              entry.pronunciation
+                            } <span class="text-sm font-semibold ml-2 uppercase px-2 py-0.5 rounded-full dark:bg-primary-teal/20 bg-primary-teal/10 text-primary-teal">${
+          entry.type
+        }</span></p>
+                        </div>
+                        <button onclick="toggleFavorite('${entry.word.toLowerCase()}')" class="p-3 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors duration-200">
+                            ${
+                              isFavorite
+                                ? `<svg id="fav-icon-${entry.word.toLowerCase()}" class="w-8 h-8 text-yellow-500 fill-current" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.5 9.5h-3v-3a.5.5 0 00-1 0v3h-3a.5.5 0 000 1h3v3a.5.5 0 001 0v-3h3a.5.5 0 000-1z"/></svg>`
+                                : `<svg id="fav-icon-${entry.word.toLowerCase()}" class="w-8 h-8 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path></svg>`
+                            }
+                        </button>
+                    </div>
+
+                    <!-- Definitions -->
+                    <div class="space-y-4">
+                        <h3 class="text-xl font-bold dark:text-light-bg text-dark-bg border-b pb-2 dark:border-gray-700 border-gray-200">Definitions</h3>
+                        <ul class="list-disc list-inside space-y-2 pl-4 dark:text-gray-300 text-gray-700">
+                            ${entry.definitions
+                              .map((def) => `<li>${def}</li>`)
+                              .join("")}
+                        </ul>
+                    </div>
+                    
+                    <!-- Examples -->
+                    <div class="mt-6 space-y-4">
+                        <h3 class="text-xl font-bold dark:text-light-bg text-dark-bg border-b pb-2 dark:border-gray-700 border-gray-200">Examples</h3>
+                        <ul class="space-y-3 dark:text-gray-300 text-gray-700 italic">
+                            ${entry.examples
+                              .map(
+                                (ex) =>
+                                  `<li class="border-l-4 border-primary-teal/50 pl-3 text-sm">${ex}</li>`
+                              )
+                              .join("")}
+                        </ul>
+                    </div>
+                </div>
+            `;
+      }
+
+      function toggleFavorite(word) {
+        const index = state.favorites.indexOf(word);
+        const icon = document.getElementById(`fav-icon-${word}`);
+
+        if (index > -1) {
+          // Remove
+          state.favorites.splice(index, 1);
+          if (icon) {
+            icon.innerHTML = `<svg class="w-8 h-8 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path></svg>`;
+            icon.classList.remove("text-yellow-500", "fill-current");
+          }
+        } else {
+          // Add
+          state.favorites.push(word);
+          if (icon) {
+            icon.innerHTML = `<svg class="w-8 h-8 text-yellow-500 fill-current" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.5 9.5h-3v-3a.5.5 0 00-1 0v3h-3a.5.5 0 000 1h3v3a.5.5 0 001 0v-3h3a.5.5 0 000-1z"/></svg>`;
+            icon.classList.add("text-yellow-500", "fill-current");
+          }
+        }
+        renderFavorites();
+        // In a real app, update persistence here
+      }
+
+      function renderHistory() {
+        const list = document.getElementById("history-list");
+        if (state.history.length === 0) {
+          list.innerHTML =
+            '<p class="text-center text-gray-500 dark:text-gray-400 pt-10">No recent history.</p>';
+          return;
+        }
+
+        list.innerHTML = state.history
+          .map(
+            (word) => `
+                <li class="list-item dark:bg-dark-card bg-light-card hover:shadow-primary-teal/20 shadow-md" onclick="searchWord('${word}')">
+                    <span class="text-lg font-medium">${
+                      word.charAt(0).toUpperCase() + word.slice(1)
+                    }</span>
+                    <span class="text-primary-teal text-sm font-semibold">View</span>
+                </li>
+            `
+          )
+          .join("");
+      }
+
+      function renderFavorites() {
+        const list = document.getElementById("favorites-list");
+        if (state.favorites.length === 0) {
+          list.innerHTML =
+            '<p class="text-center text-gray-500 dark:text-gray-400 pt-10">No saved favorites.</p>';
+          return;
+        }
+
+        list.innerHTML = state.favorites
+          .map(
+            (word) => `
+                <li class="list-item dark:bg-dark-card bg-light-card hover:shadow-primary-teal/20 shadow-md">
+                    <span class="text-lg font-medium" onclick="searchWord('${word}')">${
+              word.charAt(0).toUpperCase() + word.slice(1)
+            }</span>
+                    <button onclick="toggleFavorite('${word}')" class="text-red-500 text-sm font-semibold p-2 rounded-full hover:bg-red-500/10 transition-colors duration-200">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                </li>
+            `
+          )
+          .join("");
+      }
+
+      function switchTab(tabName) {
+        // Remove active state from all buttons and hide all views
+        document.querySelectorAll(".tab-button").forEach((btn) => {
+          btn.classList.remove(
+            "active",
+            "text-primary-teal",
+            "border-primary-teal"
+          );
+          btn.classList.add("text-gray-500", "dark:text-gray-400");
+        });
+        document
+          .querySelectorAll(".tab-view")
+          .forEach((view) => view.classList.add("hidden"));
+
+        // Set active state for the current tab and show its view
+        const activeBtn = document.getElementById(`tab-${tabName}`);
+        const activeView = document.getElementById(`view-${tabName}`);
+
+        if (activeBtn) {
+          activeBtn.classList.add(
+            "active",
+            "text-primary-teal",
+            "border-primary-teal"
+          );
+          activeBtn.classList.remove("text-gray-500", "dark:text-gray-400");
+        }
+        if (activeView) {
+          activeView.classList.remove("hidden");
+        }
+
+        state.currentTab = tabName;
+      }
+
+      window.onload = initApp; // Initialize the application
+    </script>
+  </body>
+</html>
