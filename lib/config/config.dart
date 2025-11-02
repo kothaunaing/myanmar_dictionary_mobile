@@ -3,7 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 // App Information
 final String appName = "Myanmar Dictionary";
-final String appVersion = "1.0.0";
+final String appVersion = "1.0.2";
 
 // Primary brand colors - Optimized for reading comfort
 final primaryLightColor = const Color(

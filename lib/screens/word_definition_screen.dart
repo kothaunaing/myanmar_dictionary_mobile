@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:myanmar_dictionary_mobile/models/word_model.dart';
 import 'package:myanmar_dictionary_mobile/services/database_helper.dart';
-import 'package:myanmar_dictionary_mobile/services/flutter_tts.dart';
 
 class WordDefinitionScreen extends StatefulWidget {
   final String wordName;
@@ -43,10 +42,9 @@ class _WordDefinitionScreenState extends State<WordDefinitionScreen> {
   }
 
   Future<void> _checkIfFavorite() async {
-    // Implement your favorite checking logic here
-    await Future.delayed(const Duration(milliseconds: 100));
+    bool favorite = await DatabaseHelper.isFavorite(widget.wordName);
     setState(() {
-      _isFavorite = false; // Default state
+      _isFavorite = favorite;
     });
   }
 
@@ -55,20 +53,13 @@ class _WordDefinitionScreenState extends State<WordDefinitionScreen> {
       _isFavorite = !_isFavorite;
     });
 
-    // Implement your favorite saving logic here
-    // await DatabaseHelper.toggleFavorite(widget.wordName, _isFavorite);
-
-    // Show feedback
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          _isFavorite ? 'Added to favorites' : 'Removed from favorites',
-        ),
-        duration: const Duration(seconds: 2),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      ),
-    );
+    if (_isFavorite) {
+      await DatabaseHelper.addToFavorites(
+        WordPreviewModel.fromJson(_words.first.toJson()),
+      );
+    } else {
+      await DatabaseHelper.removeFromFavorites(_words.first.word);
+    }
   }
 
   @override
@@ -83,14 +74,16 @@ class _WordDefinitionScreenState extends State<WordDefinitionScreen> {
           style: const TextStyle(fontWeight: FontWeight.w600),
         ),
         actions: [
-          // IconButton(
-          //   onPressed: _toggleFavorite,
-          //   icon: Icon(
-          //     _isFavorite ? Icons.star_rounded : Icons.star_outline_rounded,
-          //     color: _isFavorite ? Colors.amber : null,
-          //   ),
-          //   tooltip: _isFavorite ? 'Remove from favorites' : 'Add to favorites',
-          // ),
+          IconButton(
+            onPressed: _toggleFavorite,
+            icon: Icon(
+              _isFavorite
+                  ? Icons.favorite_rounded
+                  : Icons.favorite_outline_rounded,
+              color: _isFavorite ? Colors.red : null,
+            ),
+            tooltip: _isFavorite ? 'Remove from favorites' : 'Add to favorites',
+          ),
           // IconButton(
           //   onPressed: () {
           //     // Share functionality
@@ -313,7 +306,7 @@ class _WordDefinitionScreenState extends State<WordDefinitionScreen> {
                   ),
                 ),
                 const SizedBox(width: 8),
-                if (word.serial != null)
+                if (word.serial != null && word.serial!.isNotEmpty)
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 8,
@@ -343,13 +336,27 @@ class _WordDefinitionScreenState extends State<WordDefinitionScreen> {
             word.meaning.replaceAll(r'\n', '\n'),
             style: const TextStyle(
               fontSize: 16,
-              height: 1.5,
+              height: 1.6,
               letterSpacing: 0.2,
             ),
           ),
-          if (word.origin.isNotEmpty) ...[
-            SizedBox(height: 5),
-            Text(word.origin),
+          if (word.origin != null && word.origin.isNotEmpty) ...[
+            SizedBox(height: 10),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.onSurface.withOpacity(0.05),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Text(
+                word.origin,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: theme.colorScheme.onSurface.withOpacity(0.5),
+                ),
+              ),
+            ),
           ],
         ],
       ),

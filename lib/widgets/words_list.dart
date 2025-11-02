@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:myanmar_dictionary_mobile/models/word_model.dart';
 import 'package:myanmar_dictionary_mobile/screens/word_definition_screen.dart';
+import 'package:myanmar_dictionary_mobile/services/database_helper.dart';
 
 class WordsList extends StatefulWidget {
   final int? total;
@@ -219,7 +220,10 @@ class _WordsListState extends State<WordsList> {
         borderRadius: BorderRadius.circular(12),
         elevation: 1,
         child: InkWell(
-          onTap: () => _navigateToDefinition(word.word),
+          onTap: () async {
+            _navigateToDefinition(word.word);
+            DatabaseHelper.addToRecents(word);
+          },
           borderRadius: BorderRadius.circular(12),
           splashColor: theme.colorScheme.primary.withOpacity(0.1),
           highlightColor: theme.colorScheme.primary.withOpacity(0.05),

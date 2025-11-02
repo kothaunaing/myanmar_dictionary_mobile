@@ -354,16 +354,10 @@ class SettingsScreen extends StatelessWidget {
 
   Future<void> _launchGitHubUrl(BuildContext context) async {
     final Uri url = Uri.parse('https://github.com/kothaunaing');
-
-    if (await canLaunchUrl(url)) {
-      await launchUrl(url);
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Could not launch GitHub URL'),
-          backgroundColor: Theme.of(context).colorScheme.error,
-        ),
-      );
+    try {
+      await launchUrl(url, mode: LaunchMode.externalApplication);
+    } catch (e) {
+      debugPrint(e.toString());
     }
   }
 }
