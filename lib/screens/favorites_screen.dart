@@ -114,6 +114,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
       // Remove from local list
       setState(() {
         _favorites.removeWhere((w) => w.id == word.id);
+        _total = _total! - 1;
       });
 
       // If we're on the last page and remove an item, we might need to load more

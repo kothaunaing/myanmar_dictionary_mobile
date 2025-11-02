@@ -151,6 +151,7 @@ class _RecentsScreenState extends State<RecentsScreen> {
       // Remove from local list
       setState(() {
         _recents.removeWhere((w) => w.id == word.id);
+        _total = _total! - 1;
       });
 
       // If we're on the last page and remove an item, we might need to load more
