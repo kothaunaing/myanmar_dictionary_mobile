@@ -19,7 +19,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
   bool _loadingMore = false;
   bool _hasMore = true;
   int _currentPage = 1;
-  final int _limit = 20;
+  final int _limit = 100;
   int? _total;
   final ScrollController _scrollController = ScrollController();
 
