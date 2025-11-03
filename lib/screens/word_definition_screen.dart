@@ -12,6 +12,7 @@ class WordDefinitionScreen extends StatefulWidget {
 
 class _WordDefinitionScreenState extends State<WordDefinitionScreen> {
   List<WordModel> _words = [];
+  List<WordPreviewModel?> _prevNextWords = [];
   bool _isLoading = true;
   bool _isFavorite = false;
   // TextToSpeech textToSpeech = TextToSpeech();
@@ -28,9 +29,13 @@ class _WordDefinitionScreenState extends State<WordDefinitionScreen> {
       final results = await DatabaseHelper.getWordsWithWordName(
         widget.wordName,
       );
+      final prevNextWords = await DatabaseHelper.getPrevAndNextWords(
+        widget.wordName,
+      );
 
       setState(() {
         _words = results;
+        _prevNextWords = prevNextWords;
         _isLoading = false;
       });
     } catch (error) {
@@ -60,6 +65,32 @@ class _WordDefinitionScreenState extends State<WordDefinitionScreen> {
     } else {
       await DatabaseHelper.removeFromFavorites(_words.first.word);
     }
+  }
+
+  void _navigateToWord(String wordName, {bool isNext = true}) {
+    Navigator.pushReplacement(
+      context,
+      PageRouteBuilder(
+        pageBuilder:
+            (context, animation, secondaryAnimation) =>
+                WordDefinitionScreen(wordName: wordName),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          var begin = Offset(isNext ? 1.0 : -1.0, 0.0);
+          var end = Offset.zero;
+          var curve = Curves.easeInOut;
+          var tween = Tween(
+            begin: begin,
+            end: end,
+          ).chain(CurveTween(curve: curve));
+
+          return SlideTransition(
+            position: animation.drive(tween),
+            child: child,
+          );
+        },
+        transitionDuration: const Duration(milliseconds: 300),
+      ),
+    );
   }
 
   @override
@@ -100,6 +131,113 @@ class _WordDefinitionScreenState extends State<WordDefinitionScreen> {
               : _words.isEmpty
               ? _buildEmptyState()
               : _buildWordDefinitions(),
+      bottomNavigationBar: _buildNavigationButtons(),
+    );
+  }
+
+  Widget _buildNavigationButtons() {
+    if (_isLoading || _words.isEmpty || _prevNextWords.length < 2) {
+      return const SizedBox.shrink();
+    }
+
+    final prevWord = _prevNextWords[0];
+    final nextWord = _prevNextWords[1];
+
+    return Container(
+      height: 100,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        border: Border(
+          top: BorderSide(
+            color: Theme.of(context).dividerColor.withOpacity(0.3),
+            width: 1,
+          ),
+        ),
+      ),
+      child: SafeArea(
+        child: Row(
+          children: [
+            // Previous button
+            Expanded(
+              child: _buildNavigationButton(word: prevWord, isNext: false),
+            ),
+            const SizedBox(width: 12),
+            // Next button
+            Expanded(
+              child: _buildNavigationButton(word: nextWord, isNext: true),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNavigationButton({
+    required WordPreviewModel? word,
+    required bool isNext,
+  }) {
+    final isEnabled = word != null;
+    final icon = isNext ? Icons.arrow_forward_ios : Icons.arrow_back_ios;
+    final text = isNext ? 'Next' : 'Previous';
+
+    return ElevatedButton(
+      onPressed:
+          isEnabled ? () => _navigateToWord(word!.word, isNext: isNext) : null,
+      style: ElevatedButton.styleFrom(
+        backgroundColor:
+            isEnabled
+                ? Theme.of(context).colorScheme.primary
+                : Theme.of(context).disabledColor,
+        foregroundColor:
+            isEnabled
+                ? Theme.of(context).colorScheme.onPrimary
+                : Theme.of(context).colorScheme.onSurface.withOpacity(0.38),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        elevation: 0,
+      ),
+      child: Row(
+        mainAxisAlignment:
+            isNext ? MainAxisAlignment.end : MainAxisAlignment.start,
+        children: [
+          if (!isNext) ...[Icon(icon, size: 16), const SizedBox(width: 8)],
+          Flexible(
+            child: Column(
+              crossAxisAlignment:
+                  isNext ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+              children: [
+                Text(
+                  text,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color:
+                        isEnabled
+                            ? Theme.of(context).colorScheme.onPrimary
+                            : Theme.of(
+                              context,
+                            ).colorScheme.onSurface.withOpacity(0.38),
+                  ),
+                ),
+                if (isEnabled) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    word!.word,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Theme.of(context).colorScheme.onPrimary,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          if (isNext) ...[const SizedBox(width: 8), Icon(icon, size: 16)],
+        ],
+      ),
     );
   }
 

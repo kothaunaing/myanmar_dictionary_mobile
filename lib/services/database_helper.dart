@@ -373,4 +373,39 @@ class DatabaseHelper {
 
     return words;
   }
+
+  static Future<List<WordPreviewModel?>> getPrevAndNextWords(
+    String currentWord,
+  ) async {
+    final db = await database;
+
+    final prevWordResult = await db.rawQuery(
+      ''' 
+    SELECT DISTINCT * FROM dictionary_words
+    WHERE LOWER(word) < LOWER(?)
+    ORDER BY LOWER(word) DESC LIMIT 1
+    ''',
+      [currentWord],
+    );
+
+    final nextWordResult = await db.rawQuery(
+      ''' 
+    SELECT DISTINCT * FROM dictionary_words
+    WHERE LOWER(word) > LOWER(?)
+    ORDER BY LOWER(word) ASC LIMIT 1
+    ''',
+      [currentWord],
+    );
+
+    final prevWord =
+        prevWordResult.isEmpty
+            ? null
+            : WordPreviewModel.fromJson(prevWordResult.first);
+    final nextWord =
+        nextWordResult.isEmpty
+            ? null
+            : WordPreviewModel.fromJson(nextWordResult.first);
+
+    return [prevWord, nextWord];
+  }
 }
