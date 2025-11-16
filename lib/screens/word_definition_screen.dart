@@ -125,12 +125,21 @@ class _WordDefinitionScreenState extends State<WordDefinitionScreen> {
           // ),
         ],
       ),
-      body:
-          _isLoading
-              ? _buildLoadingState()
-              : _words.isEmpty
-              ? _buildEmptyState()
-              : _buildWordDefinitions(),
+      body: Column(
+        children: [
+          // LinearProgress indicator at the top
+          if (_isLoading) const LinearProgressIndicator(minHeight: 2),
+          // Main content
+          Expanded(
+            child:
+                _isLoading
+                    ? _buildLoadingState()
+                    : _words.isEmpty
+                    ? _buildEmptyState()
+                    : _buildWordDefinitions(),
+          ),
+        ],
+      ),
       bottomNavigationBar: _buildNavigationButtons(),
     );
   }
@@ -246,17 +255,6 @@ class _WordDefinitionScreenState extends State<WordDefinitionScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          SizedBox(
-            width: 40,
-            height: 40,
-            child: CircularProgressIndicator(
-              strokeWidth: 3,
-              valueColor: AlwaysStoppedAnimation<Color>(
-                Theme.of(context).colorScheme.primary,
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
           Text(
             'Loading definition...',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
